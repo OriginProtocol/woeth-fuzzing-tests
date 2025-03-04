@@ -285,21 +285,21 @@ abstract contract TargetFunctions is Properties {
     /// @notice Handle pass time on chain which can result in yield drip
     /// @param _amount Amount of time to pass. 1 Day is maximum, since that is also the 
     ///        maximum yield time 
-    function handler_pass_time(uint88 _amount) public {
+    function handler_pass_time(uint24 _duration) public {
         uint256 MAX_YIELD_TIME = 1 days;
 
         // Bound amount of time to pass
-        _amount = uint88(clamp(uint256(_amount), 0, MAX_YIELD_TIME, USE_LOGS));
-        if (_amount == 0) {
+        _duration = uint88(clamp(uint256(_duration), 0, MAX_YIELD_TIME, USE_LOGS));
+        if (_duration == 0) {
             if (USE_ASSUME) hevm.assume(false);
             else return;
         }
 
         __totalAssetBefore = woeth.totalAssets();
-        hevm.warp(block.timestamp + _amount); // Timestamp
+        hevm.warp(block.timestamp + _duration); // Timestamp
 
         last_action = LastAction.PASS_TIME;
-        __lastTimePassAmount = _amount;
+        __lastTimePassAmount = _duration;
         __totalAssetAfter = woeth.totalAssets();
         __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
         __hardAssets = woeth.hardAssets();
