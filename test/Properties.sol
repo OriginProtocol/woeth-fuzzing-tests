@@ -67,10 +67,13 @@ abstract contract Properties is Setup {
     //////////////////////////////////////////////////////
     /// (t: stands for tolerance:)
     /// --- General
-    /// - If totalAsset is different than before the call, then last action shouldn't be [DONATE, MINT_OR_BURN_EXTRA_OETH] (t: 0)
-    /// - At then end with empty the vault, all user should have more oeth than at the beginning (tolerance: 10 wei)
-    /// - The sum of all deposited and minted should be lower than or equal to the sum of all redeemed and withdrawn (tolerance: 10 wei)
-    /// - The amount of credit in woeth should be equal to oethCreditsHighres - donation (t: 1e11 wei)
+    /// - [property_A] If totalAsset is different than before the call, then last action shouldn't be [DONATE, MINT_OR_BURN_EXTRA_OETH] (t: 0)
+    /// - [__property_B] At the end with an empty vault, all user should have more oeth than at the beginning (tolerance: 10 wei)
+    /// - [__property_C] The sum of all deposited and minted should be lower than or equal to the sum of all redeemed and withdrawn (tolerance: 10 wei)
+    /// - [__property_D] Amount minted/deposited minus the amount redeemed/withdrawn should always be smaller than total assets in WOETH
+    /// - [__property_E] Hard assets and yield assets should always be smaller or equal to OETH balance
+    /// - [__property_F] TotalAssets should be bigger than hard assets and smaller or equal to hardAssets and yieldAssets combined 
+    /// - [property_G] If time passes and yield emission is active, totalAssets should increase
     /// --- ERC4626
     /// - The views functions should never revert (t:0)
     /// - On deposit or mint:
@@ -116,15 +119,14 @@ abstract contract Properties is Setup {
     }
 
     /// @dev Tested in the "afterInvariant" function
-    ///      Amount deposited/minted minus amount withdrawn/redeemed should always
-    ///      be smaller than the amount of hardAssets on the contract
     function __property_D() internal returns (bool) {
         int256 amountAdded = int256(__sum_deposited + __sum_minted);
         int256 amountRemoved = int256(__sum_redeemed + __sum_withdrawn);
-        if (amountAdded - amountRemoved > __hardAssets) {
+
+        if (amountAdded > amountRemoved && uint256(amountAdded - amountRemoved) > __totalAssetAfter) {
             emit Log.log_named_int("amountAdded", amountAdded);
             emit Log.log_named_int("amountRemoved", amountRemoved);
-            emit Log.log_named_int("__hardAssets", __hardAssets);
+            emit Log.log_named_uint("__totalAssetAfter", __totalAssetAfter);
             return false;
         }
         return true;
@@ -132,7 +134,6 @@ abstract contract Properties is Setup {
 
 
     /// @dev Tested in the "afterInvariant" function
-    ///      Hard assets and yield assets should always be smaller or equal to OETH balance
     function __property_E() public returns (bool) {
         if(__hardAssets + int256(int128(__yieldAssets)) < 0) {
             emit Log.log_named_int("Combined assets negative hardAssets   ", __hardAssets);
@@ -154,8 +155,6 @@ abstract contract Properties is Setup {
     }
 
     /// @dev Tested in the "afterInvariant" function
-    ///      TotalAssets should be bigger than hard assets and smaller or equal to hardAssets
-    ///      and yieldAssets combined 
     function __property_F() public returns (bool) {
         int256 combinedAssets = __hardAssets + int256(int128(__yieldAssets));
         int256 totalAssets = int256(__totalAssetAfter);
@@ -170,7 +169,6 @@ abstract contract Properties is Setup {
         return true;
     }
 
-    /// @dev If time passes and WOETH is giving out yield 
     function property_G() public returns (bool) {
         // t_G_time
         if (last_action == LastAction.PASS_TIME &&  // if time has passed
