@@ -282,7 +282,7 @@ abstract contract TargetFunctions is Properties {
         __yieldEnd = woeth.yieldEnd();
     }
 
-    /// @notice Handle pass time on chain
+    /// @notice Handle pass time on chain which can result in yield drip
     /// @param _amount Amount of time to pass. 1 Day is maximum, since that is also the 
     ///        maximum yield time 
     function handler_pass_time(uint88 _amount) public {
@@ -299,6 +299,7 @@ abstract contract TargetFunctions is Properties {
         hevm.warp(block.timestamp + _amount); // Timestamp
 
         last_action = LastAction.PASS_TIME;
+        __lastTimePassAmount = _amount;
         __totalAssetAfter = woeth.totalAssets();
         __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
         __hardAssets = woeth.hardAssets();
@@ -383,7 +384,7 @@ abstract contract TargetFunctions is Properties {
         require(__property_C(), "Invariant C failed");
         require(__property_D(), "Invariant D failed");
         require(__property_E(), "Invariant E failed");
-        require(__property_F(), "Invariant E failed");
+        require(__property_F(), "Invariant F failed");
     }
 
     //////////////////////////////////////////////////////

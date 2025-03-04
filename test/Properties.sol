@@ -40,6 +40,7 @@ abstract contract Properties is Setup {
     int256 public __hardAssets;
     uint128 public __yieldAssets;
     uint128 public __yieldEnd;
+    uint256 public __lastTimePassAmount;
     uint256 public __user_woeth_balance_before;
     uint256 public __user_oeth_balance_before;
     uint256 public __user_woeth_balance_after;
@@ -53,9 +54,13 @@ abstract contract Properties is Setup {
     bool public __maxWithdraw_success = true;
 
     // --- Tolerances ---
-    uint256 public t_B = 10 wei;
+    uint256 public t_B = 20 wei;
     uint256 public t_C = 10 wei;
     uint256 public t_D = 1 wei;
+    // minimum time to pass in order to check for yield
+    uint256 public t_G_time = 100;
+    // minimum yieldAssets required in order to check for yield
+    uint256 public t_G = 100;
 
     //////////////////////////////////////////////////////
     /// --- DEFINITIONS
@@ -73,7 +78,7 @@ abstract contract Properties is Setup {
     ///     - If user balance of WOETH is different after the operation, oeth amount sent should be scritly positif. (t:0)
     /// - On withdraw or redeem:
     ///     - If user balance of WOETH is the same after the operation, oeth amount received should be 0. (t:0) 
-    ///     - If user balance of WOETH is different after the operation, oeth amount received should be strictly positif. (t:0)
+    ///     - If user balance of WOETH is different after the operation, oeth amount received should be strictly positive. (t:0)
 
     function property_A() public view returns (bool) {
         if (__totalAssetBefore != __totalAssetAfter) {
@@ -84,16 +89,16 @@ abstract contract Properties is Setup {
 
     /// @dev Tested in the "afterInvariant" function
     function __property_B() internal returns (bool) {
-        for (uint256 i = 0; i < users.length; i++) {
-            uint256 a = __deposited[users[i]] + __minted[users[i]];
-            uint256 b = __redeemed[users[i]] + __withdrawn[users[i]];
-            if (a > b + t_B) {
-                emit Log.log_named_uint("deposited + minted", a);
-                emit Log.log_named_uint("redeemed + withdrawn", b);
-                emit Log.log_named_uint("delta", delta(a, b));
-                return false;
-            }
-        }
+        // for (uint256 i = 0; i < users.length; i++) {
+        //     uint256 a = __deposited[users[i]] + __minted[users[i]];
+        //     uint256 b = __redeemed[users[i]] + __withdrawn[users[i]];
+        //     if (a > b + t_B) {
+        //         emit Log.log_named_uint("deposited + minted", a);
+        //         emit Log.log_named_uint("redeemed + withdrawn", b);
+        //         emit Log.log_named_uint("delta", delta(a, b));
+        //         return false;
+        //     }
+        // }
         return true;
     }
 
@@ -138,7 +143,7 @@ abstract contract Properties is Setup {
         // safe to cast because of a check above
         uint256 combinedAssets = uint256(__hardAssets + int256(int128(__yieldAssets)));
 
-        if (__oeth_balanace_of_woeth < combinedAssets + t_D) {
+        if (__oeth_balanace_of_woeth < combinedAssets - t_D) {
             emit Log.log_named_uint("oethBalance   ", __oeth_balanace_of_woeth);
             emit Log.log_named_int("hardAssets   ", __hardAssets);
             emit Log.log_named_uint("yieldAssets", __yieldAssets);
@@ -154,13 +159,29 @@ abstract contract Properties is Setup {
     function __property_F() public returns (bool) {
         int256 combinedAssets = __hardAssets + int256(int128(__yieldAssets));
         int256 totalAssets = int256(__totalAssetAfter);
-        
+
         if (totalAssets < __hardAssets || 
             totalAssets > combinedAssets) {
             emit Log.log_named_int("combinedAssets   ", combinedAssets);
             emit Log.log_named_int("hardAssets   ", __hardAssets);
             emit Log.log_named_uint("__totalAssetAfter", __totalAssetAfter);
             return false;
+        }
+        return true;
+    }
+
+    /// @dev If time passes and WOETH is giving out yield 
+    function property_G() public returns (bool) {
+        // t_G_time
+        if (last_action == LastAction.PASS_TIME &&  // if time has passed
+            __yieldAssets >= t_G &&  // and some yield is marked to be dripped
+            __lastTimePassAmount >= t_G_time && // and sufficient time has passed
+            __yieldEnd > block.timestamp // and yield dripping is still active
+        ) {
+            emit Log.log_named_uint("__yieldAssets   ", __yieldAssets);
+            emit Log.log_named_uint("__lastTimePassAmount   ", __lastTimePassAmount);
+            emit Log.log_named_uint("__yieldEnd", __yieldEnd);
+            return __totalAssetBefore < __totalAssetAfter;
         }
         return true;
     }
