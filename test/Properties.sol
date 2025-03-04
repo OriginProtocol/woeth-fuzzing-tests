@@ -18,7 +18,8 @@ abstract contract Properties is Setup {
         WITHDRAW,
         CHANGE_SUPPLY,
         DONATE,
-        MINT_OR_BURN_EXTRA_OETH
+        MINT_OR_BURN_EXTRA_OETH,
+        PASS_TIME
     }
 
     LastAction public last_action = LastAction.NONE;
@@ -35,6 +36,10 @@ abstract contract Properties is Setup {
     uint256 public __sum_redeemed;
     uint256 public __sum_withdrawn;
     uint256 public __sum_donated_credits;
+    uint256 public __oeth_balanace_of_woeth;
+    int256 public __hardAssets;
+    uint128 public __yieldAssets;
+    uint128 public __yieldEnd;
     uint256 public __user_woeth_balance_before;
     uint256 public __user_oeth_balance_before;
     uint256 public __user_woeth_balance_after;
@@ -50,7 +55,7 @@ abstract contract Properties is Setup {
     // --- Tolerances ---
     uint256 public t_B = 10 wei;
     uint256 public t_C = 10 wei;
-    uint256 public t_D = 1e11 wei;
+    uint256 public t_D = 1 wei;
 
     //////////////////////////////////////////////////////
     /// --- DEFINITIONS
@@ -105,15 +110,56 @@ abstract contract Properties is Setup {
         return true;
     }
 
-    function property_D() public returns (bool) {
-        (uint256 totalCreditWoeth,,) = oeth.creditsBalanceOfHighres(address(woeth));
-        uint256 localCreditWoeth = (woeth.oethCreditsHighres());
-        uint256 targetCreditWoeth = totalCreditWoeth - __sum_donated_credits;
-        if (!approxEqAbs(localCreditWoeth, targetCreditWoeth, t_D)) {
-            emit Log.log_named_uint("localCreditWoeth   ", localCreditWoeth);
-            emit Log.log_named_uint("totalCreditWoeth   ", totalCreditWoeth);
-            emit Log.log_named_uint("sum_donated_credits", __sum_donated_credits);
-            emit Log.log_named_uint("diff: ", delta(localCreditWoeth, targetCreditWoeth));
+    /// @dev Tested in the "afterInvariant" function
+    ///      Amount deposited/minted minus amount withdrawn/redeemed should always
+    ///      be smaller than the amount of hardAssets on the contract
+    function __property_D() internal returns (bool) {
+        int256 amountAdded = int256(__sum_deposited + __sum_minted);
+        int256 amountRemoved = int256(__sum_redeemed + __sum_withdrawn);
+        if (amountAdded - amountRemoved > __hardAssets) {
+            emit Log.log_named_int("amountAdded", amountAdded);
+            emit Log.log_named_int("amountRemoved", amountRemoved);
+            emit Log.log_named_int("__hardAssets", __hardAssets);
+            return false;
+        }
+        return true;
+    }
+
+
+    /// @dev Tested in the "afterInvariant" function
+    ///      Hard assets and yield assets should always be smaller or equal to OETH balance
+    function __property_E() public returns (bool) {
+        if(__hardAssets + int256(int128(__yieldAssets)) < 0) {
+            emit Log.log_named_int("Combined assets negative hardAssets   ", __hardAssets);
+            emit Log.log_named_uint("yieldAssets", __yieldAssets);
+            return false;
+        }
+
+        // safe to cast because of a check above
+        uint256 combinedAssets = uint256(__hardAssets + int256(int128(__yieldAssets)));
+
+        if (__oeth_balanace_of_woeth < combinedAssets + t_D) {
+            emit Log.log_named_uint("oethBalance   ", __oeth_balanace_of_woeth);
+            emit Log.log_named_int("hardAssets   ", __hardAssets);
+            emit Log.log_named_uint("yieldAssets", __yieldAssets);
+            emit Log.log_named_uint("diff: ", delta(__oeth_balanace_of_woeth, combinedAssets));
+            return false;
+        }
+        return true;
+    }
+
+    /// @dev Tested in the "afterInvariant" function
+    ///      TotalAssets should be bigger than hard assets and smaller or equal to hardAssets
+    ///      and yieldAssets combined 
+    function __property_F() public returns (bool) {
+        int256 combinedAssets = __hardAssets + int256(int128(__yieldAssets));
+        int256 totalAssets = int256(__totalAssetAfter);
+        
+        if (totalAssets < __hardAssets || 
+            totalAssets > combinedAssets) {
+            emit Log.log_named_int("combinedAssets   ", combinedAssets);
+            emit Log.log_named_int("hardAssets   ", __hardAssets);
+            emit Log.log_named_uint("__totalAssetAfter", __totalAssetAfter);
             return false;
         }
         return true;

@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 abstract contract HelperAssumption {
     /// @notice As WOETH contract will be used for OUSD as OS (Sonic), we need to ensure that
-    ///         the maximum total supply is set realisticallly.
+    ///         the maximum total supply is set realistically.
     ///         - WOETH: There is less than 3M WETH in circulation in mainnet.
     ///         - OUSD : The biggest stablecoin has a total supply of 67B (USDT on mainnet and Tron).
     ///         - OS   : The current total supply of S is 4B.

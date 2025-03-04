@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 // Contracts
 import {Properties} from "./Properties.sol";
+import {Log} from "./helpers/HelperLog.sol";
 
 /// @title TargetFunctions contract
 /// @notice Use to handle all calls to the tested contract.
@@ -50,6 +51,10 @@ abstract contract TargetFunctions is Properties {
         // --- Ghost data after ---
         last_action = LastAction.DEPOSIT;
         __totalAssetAfter = woeth.totalAssets();
+        __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
+        __hardAssets = woeth.hardAssets();
+        __yieldAssets = woeth.yieldAssets();
+        __yieldEnd = woeth.yieldEnd();
         __user_oeth_balance_after = oeth.balanceOf(user);
         __user_woeth_balance_after = woeth.balanceOf(user);
     }
@@ -97,6 +102,10 @@ abstract contract TargetFunctions is Properties {
         // --- Ghost data after ---
         last_action = LastAction.MINT;
         __totalAssetAfter = woeth.totalAssets();
+        __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
+        __hardAssets = woeth.hardAssets();
+        __yieldAssets = woeth.yieldAssets();
+        __yieldEnd = woeth.yieldEnd();
         __user_oeth_balance_after = oeth.balanceOf(user);
         __user_woeth_balance_after = woeth.balanceOf(user);
     }
@@ -142,6 +151,10 @@ abstract contract TargetFunctions is Properties {
         // --- Ghost data after ---
         last_action = LastAction.REDEEM;
         __totalAssetAfter = woeth.totalAssets();
+        __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
+        __hardAssets = woeth.hardAssets();
+        __yieldAssets = woeth.yieldAssets();
+        __yieldEnd = woeth.yieldEnd();
         __redeemed[user] += oethAmount;
         __sum_redeemed += oethAmount;
         __user_oeth_balance_after = oeth.balanceOf(user);
@@ -193,6 +206,10 @@ abstract contract TargetFunctions is Properties {
         // --- Ghost data after ---
         last_action = LastAction.WITHDRAW;
         __totalAssetAfter = woeth.totalAssets();
+        __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
+        __hardAssets = woeth.hardAssets();
+        __yieldAssets = woeth.yieldAssets();
+        __yieldEnd = woeth.yieldEnd();
         __withdrawn[user] += amountToWithdraw;
         __sum_withdrawn += amountToWithdraw;
         __user_oeth_balance_after = oeth.balanceOf(user);
@@ -225,12 +242,16 @@ abstract contract TargetFunctions is Properties {
         // --- Ghost data after ---
         last_action = LastAction.CHANGE_SUPPLY;
         __totalAssetAfter = woeth.totalAssets();
+        __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
+        __hardAssets = woeth.hardAssets();
+        __yieldAssets = woeth.yieldAssets();
+        __yieldEnd = woeth.yieldEnd();
     }
 
     /// @notice Handle donate in OETH.
     /// @param _amount Amount of OETH to donate.
     function handler_donate(uint88 _amount) public {
-        // Bound amout to donate.
+        // Bound amount to donate.
         _amount = uint88(clamp(uint256(_amount), 0, _mintableAmount(), USE_LOGS));
         if (_amount == 0) {
             if (USE_ASSUME) hevm.assume(false);
@@ -255,6 +276,34 @@ abstract contract TargetFunctions is Properties {
         // --- Ghost data after ---
         last_action = LastAction.DONATE;
         __totalAssetAfter = woeth.totalAssets();
+        __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
+        __hardAssets = woeth.hardAssets();
+        __yieldAssets = woeth.yieldAssets();
+        __yieldEnd = woeth.yieldEnd();
+    }
+
+    /// @notice Handle pass time on chain
+    /// @param _amount Amount of time to pass. 1 Day is maximum, since that is also the 
+    ///        maximum yield time 
+    function handler_pass_time(uint88 _amount) public {
+        uint256 MAX_YIELD_TIME = 1 days;
+
+        // Bound amount of time to pass
+        _amount = uint88(clamp(uint256(_amount), 0, MAX_YIELD_TIME, USE_LOGS));
+        if (_amount == 0) {
+            if (USE_ASSUME) hevm.assume(false);
+            else return;
+        }
+
+        __totalAssetBefore = woeth.totalAssets();
+        hevm.warp(block.timestamp + _amount); // Timestamp
+
+        last_action = LastAction.PASS_TIME;
+        __totalAssetAfter = woeth.totalAssets();
+        __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
+        __hardAssets = woeth.hardAssets();
+        __yieldAssets = woeth.yieldAssets();
+        __yieldEnd = woeth.yieldEnd();
     }
 
     /// @notice Handle manage supplies in OETH.
@@ -270,6 +319,10 @@ abstract contract TargetFunctions is Properties {
         // --- Ghost data after ---
         last_action = LastAction.MINT_OR_BURN_EXTRA_OETH;
         __totalAssetAfter = woeth.totalAssets();
+        __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
+        __hardAssets = woeth.hardAssets();
+        __yieldAssets = woeth.yieldAssets();
+        __yieldEnd = woeth.yieldEnd();
     }
 
     /// @notice Handle views function
@@ -328,6 +381,9 @@ abstract contract TargetFunctions is Properties {
         // --- Assertions ---
         require(__property_B(), "Invariant B failed");
         require(__property_C(), "Invariant C failed");
+        require(__property_D(), "Invariant D failed");
+        require(__property_E(), "Invariant E failed");
+        require(__property_F(), "Invariant E failed");
     }
 
     //////////////////////////////////////////////////////
