@@ -18,4 +18,7 @@ abstract contract HelperAssumption {
 
     /// @notice Initial amount of OETH send to dead addresses.
     uint256 public constant INITIAL_DEAD_OETH_BALANCE = 11e16;
+
+    /// @notice Maximum amount of time a yield will drip without a contract interaction
+    uint256 MAX_YIELD_TIME = 1 days;
 }

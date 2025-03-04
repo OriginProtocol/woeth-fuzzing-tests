@@ -286,8 +286,6 @@ abstract contract TargetFunctions is Properties {
     /// @param _duration Amount of time to pass. 1 Day is maximum, since that is also the 
     ///        maximum yield time 
     function handler_pass_time(uint24 _duration) public {
-        uint256 MAX_YIELD_TIME = 1 days;
-
         // Bound amount of time to pass
         _duration = uint24(clamp(uint256(_duration), 1, MAX_YIELD_TIME, USE_LOGS));
 
