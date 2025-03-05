@@ -19,7 +19,8 @@ abstract contract Properties is Setup {
         CHANGE_SUPPLY,
         DONATE,
         MINT_OR_BURN_EXTRA_OETH,
-        PASS_TIME
+        PASS_TIME,
+        TRANSFER
     }
 
     LastAction public last_action = LastAction.NONE;
@@ -29,6 +30,8 @@ abstract contract Properties is Setup {
     mapping(address => uint256) public __minted;
     mapping(address => uint256) public __redeemed;
     mapping(address => uint256) public __withdrawn;
+    mapping(address => uint256) public __transferFrom;
+    mapping(address => uint256) public __transferTo;
     uint256 public __totalAssetBefore;
     uint256 public __totalAssetAfter;
     uint256 public __sum_deposited;
@@ -70,12 +73,13 @@ abstract contract Properties is Setup {
     /// --- General
     /// - [property_A] If totalAsset is different than before the call, then last action shouldn't be [DONATE, MINT_OR_BURN_EXTRA_OETH] (t: 0)
     /// - [__property_B] At the end with an empty vault, all user should have more oeth than at the beginning (tolerance: 10 wei)
+    ///                  NOTICE once we enabled transfers this invariant no longer applies
     /// - [__property_C] The sum of all deposited and minted should be lower than or equal to the sum of all redeemed and withdrawn (tolerance: 10 wei)
     /// - [__property_D] Amount minted/deposited minus the amount redeemed/withdrawn should always be smaller than total assets in WOETH
     /// - [__property_E] Hard assets and yield assets should always be smaller or equal to OETH balance
     /// - [__property_F] TotalAssets should be bigger or equal than hard assets and smaller or equal to hardAssets and yieldAssets combined 
     /// - [property_G] If time passes and yield emission is active, totalAssets should increase
-    /// - [INVARIANT TODOO] transfer shouldn't change total assets
+    /// - [property_H] transfer shouldn't change total assets
     /// --- ERC4626
     /// - The views functions should never revert (t:0)
     /// - On deposit or mint:
@@ -93,19 +97,19 @@ abstract contract Properties is Setup {
     }
 
     /// @dev Tested in the "afterInvariant" function
-    function __property_B() internal returns (bool) {
-        for (uint256 i = 0; i < users.length; i++) {
-            uint256 a = __deposited[users[i]] + __minted[users[i]];
-            uint256 b = __redeemed[users[i]] + __withdrawn[users[i]];
-            if (a > b + t_B) {
-                emit Log.log_named_uint("deposited + minted", a);
-                emit Log.log_named_uint("redeemed + withdrawn", b);
-                emit Log.log_named_uint("delta", delta(a, b));
-                return false;
-            }
-        }
-        return true;
-    }
+    // function __property_B() internal returns (bool) {
+    //     for (uint256 i = 0; i < users.length; i++) {
+    //         uint256 a = __deposited[users[i]] + __minted[users[i]];
+    //         uint256 b = __redeemed[users[i]] + __withdrawn[users[i]];
+    //         if (a > b + t_B) {
+    //             emit Log.log_named_uint("deposited + minted", a);
+    //             emit Log.log_named_uint("redeemed + withdrawn", b);
+    //             emit Log.log_named_uint("delta", delta(a, b));
+    //             return false;
+    //         }
+    //     }
+    //     return true;
+    // }
 
     /// @dev Tested in the "afterInvariant" function
     function __property_C() internal returns (bool) {
@@ -172,7 +176,6 @@ abstract contract Properties is Setup {
     }
 
     function property_G() public returns (bool) {
-        emit Log.log("Calling property_G");
         if (last_action == LastAction.PASS_TIME &&  // if time has passed
             // and so much yield is distributed that each second will contribute to yield
             __yieldAssets >= t_G && 
@@ -184,7 +187,13 @@ abstract contract Properties is Setup {
             emit Log.log_named_uint("__yieldEnd", __yieldEnd);
             return __totalAssetBefore < __totalAssetAfter;
         }
-        emit Log.log("RETURNING TRUE");
+        return true;
+    }
+
+    function property_H() public view returns (bool) {
+        if (__totalAssetBefore != __totalAssetAfter) {
+            return last_action != LastAction.TRANSFER;
+        }
         return true;
     }
 
