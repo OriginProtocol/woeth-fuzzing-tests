@@ -18,10 +18,8 @@ remappings = [
 ]
 
 [invariant]
-#runs = 250
-#depth = 500
-runs = 50
-depth = 150
+runs = 250
+depth = 500
 show_metrics = true
 fail_on_revert = true
 shrink_run_limit = 5000
@@ -33,7 +31,7 @@ solmate = "6.8.0"
 solady = "0.1.8"
 "@openzeppelin-contracts" = "4.2.0"
 "@openzeppelin-contracts-upgradeable" = "5.2.0"
-origin-dollar = { version = "v1", git = "https://github.com/OriginProtocol/origin-dollar.git", rev = "b2ea11cc5ebf75d94814e08c9b44661ed63f8a31" }
+origin-dollar = { version = "v1", git = "https://github.com/OriginProtocol/origin-dollar.git", rev = "a53a8ceb2acf5a6bf39d971e4163a26a2ff84e3d" }
 
 [soldeer]
 remappings_generate = true
