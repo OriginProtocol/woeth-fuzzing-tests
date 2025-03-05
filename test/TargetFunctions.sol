@@ -52,7 +52,7 @@ abstract contract TargetFunctions is Properties {
         last_action = LastAction.DEPOSIT;
         __totalAssetAfter = woeth.totalAssets();
         __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
-        __userAssets = woeth.userAssets();
+        __trackedAssets = woeth.trackedAssets();
         __yieldAssets = woeth.yieldAssets();
         __yieldEnd = woeth.yieldEnd();
         __user_oeth_balance_after = oeth.balanceOf(user);
@@ -103,7 +103,7 @@ abstract contract TargetFunctions is Properties {
         last_action = LastAction.MINT;
         __totalAssetAfter = woeth.totalAssets();
         __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
-        __userAssets = woeth.userAssets();
+        __trackedAssets = woeth.trackedAssets();
         __yieldAssets = woeth.yieldAssets();
         __yieldEnd = woeth.yieldEnd();
         __user_oeth_balance_after = oeth.balanceOf(user);
@@ -152,7 +152,7 @@ abstract contract TargetFunctions is Properties {
         last_action = LastAction.REDEEM;
         __totalAssetAfter = woeth.totalAssets();
         __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
-        __userAssets = woeth.userAssets();
+        __trackedAssets = woeth.trackedAssets();
         __yieldAssets = woeth.yieldAssets();
         __yieldEnd = woeth.yieldEnd();
         __redeemed[user] += oethAmount;
@@ -207,7 +207,7 @@ abstract contract TargetFunctions is Properties {
         last_action = LastAction.WITHDRAW;
         __totalAssetAfter = woeth.totalAssets();
         __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
-        __userAssets = woeth.userAssets();
+        __trackedAssets = woeth.trackedAssets();
         __yieldAssets = woeth.yieldAssets();
         __yieldEnd = woeth.yieldEnd();
         __withdrawn[user] += amountToWithdraw;
@@ -243,7 +243,7 @@ abstract contract TargetFunctions is Properties {
         last_action = LastAction.CHANGE_SUPPLY;
         __totalAssetAfter = woeth.totalAssets();
         __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
-        __userAssets = woeth.userAssets();
+        __trackedAssets = woeth.trackedAssets();
         __yieldAssets = woeth.yieldAssets();
         __yieldEnd = woeth.yieldEnd();
     }
@@ -277,7 +277,7 @@ abstract contract TargetFunctions is Properties {
         last_action = LastAction.DONATE;
         __totalAssetAfter = woeth.totalAssets();
         __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
-        __userAssets = woeth.userAssets();
+        __trackedAssets = woeth.trackedAssets();
         __yieldAssets = woeth.yieldAssets();
         __yieldEnd = woeth.yieldEnd();
     }
@@ -297,7 +297,7 @@ abstract contract TargetFunctions is Properties {
         __lastTimePassAmount = _duration;
         __totalAssetAfter = woeth.totalAssets();
         __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
-        __userAssets = woeth.userAssets();
+        __trackedAssets = woeth.trackedAssets();
         __yieldAssets = woeth.yieldAssets();
         __yieldEnd = woeth.yieldEnd();
     }
@@ -334,7 +334,7 @@ abstract contract TargetFunctions is Properties {
         __transferTo[userReceiver] = balance;
         __totalAssetAfter = woeth.totalAssets();
         __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
-        __userAssets = woeth.userAssets();
+        __trackedAssets = woeth.trackedAssets();
         __yieldAssets = woeth.yieldAssets();
         __yieldEnd = woeth.yieldEnd();
     }
@@ -353,7 +353,7 @@ abstract contract TargetFunctions is Properties {
         last_action = LastAction.MINT_OR_BURN_EXTRA_OETH;
         __totalAssetAfter = woeth.totalAssets();
         __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
-        __userAssets = woeth.userAssets();
+        __trackedAssets = woeth.trackedAssets();
         __yieldAssets = woeth.yieldAssets();
         __yieldEnd = woeth.yieldEnd();
     }

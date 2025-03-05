@@ -40,7 +40,7 @@ abstract contract Properties is Setup {
     uint256 public __sum_withdrawn;
     uint256 public __sum_donated_credits;
     uint256 public __oeth_balanace_of_woeth;
-    int256 public __userAssets;
+    uint256 public __trackedAssets;
     uint128 public __yieldAssets;
     // yield end before the pass time handler is called
     uint128 public __yieldEndBefore;
@@ -76,8 +76,8 @@ abstract contract Properties is Setup {
     ///                  NOTICE once we enabled transfers this invariant no longer applies
     /// - [__property_C] The sum of all deposited and minted should be lower than or equal to the sum of all redeemed and withdrawn (tolerance: 10 wei)
     /// - [__property_D] Amount minted/deposited minus the amount redeemed/withdrawn should always be smaller than total assets in WOETH
-    /// - [__property_E] Hard assets and yield assets should always be smaller or equal to OETH balance
-    /// - [__property_F] TotalAssets should be bigger or equal than hard assets and smaller or equal to hardAssets and yieldAssets combined 
+    /// - [__property_E] Tracked assets should always be smaller or equal to OETH balance
+    /// - [__property_F] TotalAssets should be bigger or equal than tracked assets minus yield assets and smaller or equal to tracked assets
     /// - [property_G] If time passes and yield emission is active, totalAssets should increase
     /// - [property_H] transfer shouldn't change total assets
     /// --- ERC4626
@@ -141,20 +141,11 @@ abstract contract Properties is Setup {
 
     /// @dev Tested in the "afterInvariant" function
     function __property_E() public returns (bool) {
-        if(__userAssets + int256(int128(__yieldAssets)) < 0) {
-            emit Log.log_named_int("Combined assets negative userAssets   ", __userAssets);
-            emit Log.log_named_uint("yieldAssets", __yieldAssets);
-            return false;
-        }
-
-        // safe to cast because of a check above
-        uint256 combinedAssets = uint256(__userAssets + int256(int128(__yieldAssets)));
-
-        if (__oeth_balanace_of_woeth < combinedAssets - t_D) {
+        if (__oeth_balanace_of_woeth < __trackedAssets - t_D) {
             emit Log.log_named_uint("oethBalance   ", __oeth_balanace_of_woeth);
-            emit Log.log_named_int("userAssets   ", __userAssets);
+            emit Log.log_named_uint("tracked assets   ", __trackedAssets);
             emit Log.log_named_uint("yieldAssets", __yieldAssets);
-            emit Log.log_named_uint("diff: ", delta(__oeth_balanace_of_woeth, combinedAssets));
+            emit Log.log_named_uint("diff: ", delta(__oeth_balanace_of_woeth, __trackedAssets));
             return false;
         }
         return true;
@@ -162,13 +153,13 @@ abstract contract Properties is Setup {
 
     /// @dev Tested in the "afterInvariant" function
     function __property_F() public returns (bool) {
-        int256 combinedAssets = __userAssets + int256(int128(__yieldAssets));
-        int256 totalAssets = int256(__totalAssetAfter);
+        uint256 assetsWithoutYield = __trackedAssets - __yieldAssets;
+        uint256 totalAssets = __totalAssetAfter;
 
-        if (totalAssets < __userAssets || 
-            totalAssets > combinedAssets) {
-            emit Log.log_named_int("combinedAssets   ", combinedAssets);
-            emit Log.log_named_int("hardAssets   ", __userAssets);
+        if (totalAssets < assetsWithoutYield || 
+            totalAssets > __trackedAssets) {
+            emit Log.log_named_uint("assetsWithoutYield   ", assetsWithoutYield);
+            emit Log.log_named_uint("trackedAssets   ", __trackedAssets);
             emit Log.log_named_uint("__totalAssetAfter", __totalAssetAfter);
             return false;
         }
