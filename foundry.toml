@@ -18,10 +18,10 @@ remappings = [
 ]
 
 [invariant]
-#runs = 250
-#depth = 500
-runs = 40
-depth = 200
+runs = 250
+depth = 500
+#runs = 40
+#depth = 200
 show_metrics = true
 fail_on_revert = true
 shrink_run_limit = 5000

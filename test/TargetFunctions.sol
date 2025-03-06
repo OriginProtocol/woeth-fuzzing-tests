@@ -8,6 +8,7 @@ import {Log} from "./helpers/HelperLog.sol";
 /// @title TargetFunctions contract
 /// @notice Use to handle all calls to the tested contract.
 abstract contract TargetFunctions is Properties {
+
     //////////////////////////////////////////////////////
     /// --- HANDLERS
     //////////////////////////////////////////////////////
@@ -43,6 +44,7 @@ abstract contract TargetFunctions is Properties {
         __sum_deposited += balanceOETH;
         __user_oeth_balance_before = oeth.balanceOf(user);
         __user_woeth_balance_before = woeth.balanceOf(user);
+        uint256 oethPreviewAmountBefore = woeth.previewRedeem(1e18);
 
         // Deposit OETH.
         hevm.prank(user);
@@ -57,6 +59,8 @@ abstract contract TargetFunctions is Properties {
         __yieldEnd = woeth.yieldEnd();
         __user_oeth_balance_after = oeth.balanceOf(user);
         __user_woeth_balance_after = woeth.balanceOf(user);
+
+        _checkPreviewRedeemAmounts(oethPreviewAmountBefore);
     }
 
     /// @notice Handle mint in WOETH.
@@ -94,6 +98,7 @@ abstract contract TargetFunctions is Properties {
         __minted[user] += mintedOETH;
         __user_oeth_balance_before = oeth.balanceOf(user);
         __user_woeth_balance_before = woeth.balanceOf(user);
+        uint256 oethPreviewAmountBefore = woeth.previewRedeem(1e18);
 
         // Mint WOETH.
         hevm.prank(user);
@@ -108,6 +113,8 @@ abstract contract TargetFunctions is Properties {
         __yieldEnd = woeth.yieldEnd();
         __user_oeth_balance_after = oeth.balanceOf(user);
         __user_woeth_balance_after = woeth.balanceOf(user);
+
+        _checkPreviewRedeemAmounts(oethPreviewAmountBefore);
     }
 
     /// @notice Handle redeem in WOETH.
@@ -143,6 +150,7 @@ abstract contract TargetFunctions is Properties {
         __totalAssetBefore = woeth.totalAssets();
         __user_oeth_balance_before = oeth.balanceOf(user);
         __user_woeth_balance_before = woeth.balanceOf(user);
+        uint256 oethPreviewAmountBefore = woeth.previewRedeem(1e18);
 
         // Redeem WOETH.
         hevm.prank(user);
@@ -165,6 +173,7 @@ abstract contract TargetFunctions is Properties {
         __sum_redeemed += oethAmount;
         __user_oeth_balance_after = oeth.balanceOf(user);
         __user_woeth_balance_after = woeth.balanceOf(user);
+        _checkPreviewRedeemAmounts(oethPreviewAmountBefore);
 
         // Burn OETH from user.
         _burnOETHFrom(user, oeth.balanceOf(user));
@@ -204,6 +213,7 @@ abstract contract TargetFunctions is Properties {
         __totalAssetBefore = woeth.totalAssets();
         __user_oeth_balance_before = oeth.balanceOf(user);
         __user_woeth_balance_before = woeth.balanceOf(user);
+        uint256 oethPreviewAmountBefore = woeth.previewRedeem(1e18);
 
         // Withdraw WOETH.
         hevm.prank(user);
@@ -221,6 +231,7 @@ abstract contract TargetFunctions is Properties {
         __user_oeth_balance_after = oeth.balanceOf(user);
         __user_woeth_balance_after = woeth.balanceOf(user);
 
+        _checkPreviewRedeemAmounts(oethPreviewAmountBefore);
         // Burn OETH from user.
         _burnOETHFrom(user, oeth.balanceOf(user));
     }
@@ -240,6 +251,7 @@ abstract contract TargetFunctions is Properties {
 
         // --- Ghost data before ---
         __totalAssetBefore = woeth.totalAssets();
+        uint256 oethPreviewAmountBefore = woeth.previewRedeem(1e18);
 
         // Change supply
         hevm.prank(vault);
@@ -252,6 +264,7 @@ abstract contract TargetFunctions is Properties {
         __trackedAssets = woeth.trackedAssets();
         __yieldAssets = woeth.yieldAssets();
         __yieldEnd = woeth.yieldEnd();
+        _checkPreviewRedeemAmounts(oethPreviewAmountBefore);
     }
 
     /// @notice Handle donate in OETH.
@@ -270,6 +283,7 @@ abstract contract TargetFunctions is Properties {
         // --- Ghost data before ---
         __totalAssetBefore = woeth.totalAssets();
         (uint256 creditBefore,,) = oeth.creditsBalanceOfHighres(address(woeth));
+        uint256 oethPreviewAmountBefore = woeth.previewRedeem(1e18);
 
         // Donate OETH
         hevm.prank(address(this));
@@ -286,6 +300,8 @@ abstract contract TargetFunctions is Properties {
         __trackedAssets = woeth.trackedAssets();
         __yieldAssets = woeth.yieldAssets();
         __yieldEnd = woeth.yieldEnd();
+
+        _checkPreviewRedeemAmounts(oethPreviewAmountBefore);
     }
 
     /// @notice Handle pass time on chain which can result in yield drip
@@ -331,6 +347,7 @@ abstract contract TargetFunctions is Properties {
         }
 
         __totalAssetBefore = woeth.totalAssets();
+        uint256 oethPreviewAmountBefore = woeth.previewRedeem(1e18);
 
         hevm.prank(userSender);
         woeth.transfer(users[_userIdTo % len], balance);
@@ -343,12 +360,15 @@ abstract contract TargetFunctions is Properties {
         __trackedAssets = woeth.trackedAssets();
         __yieldAssets = woeth.yieldAssets();
         __yieldEnd = woeth.yieldEnd();
+
+        _checkPreviewRedeemAmounts(oethPreviewAmountBefore);
     }
 
     /// @notice Handle calling schedule yield
     function handler_schedule_yield() public {
         __yieldEndBefore = woeth.yieldEnd();
         __totalAssetBefore = woeth.totalAssets();
+        uint256 oethPreviewAmountBefore = woeth.previewRedeem(1e18);
 
         woeth.scheduleYield();
 
@@ -358,6 +378,7 @@ abstract contract TargetFunctions is Properties {
         __trackedAssets = woeth.trackedAssets();
         __yieldAssets = woeth.yieldAssets();
         __yieldEnd = woeth.yieldEnd();
+        _checkPreviewRedeemAmounts(oethPreviewAmountBefore);
     }
 
     /// @notice Handle manage supplies in OETH.
@@ -496,5 +517,30 @@ abstract contract TargetFunctions is Properties {
         }
         require(oeth.balanceOf(dead) >= INITIAL_DEAD_OETH_BALANCE, "Setup: invalid rebasing dead balance");
         require(oeth.balanceOf(dead2) >= INITIAL_DEAD_OETH_BALANCE, "Setup: invalid rebasing dead balance");
+    }
+
+    function _checkPreviewRedeemAmounts(uint256 amountBefore) internal {
+        uint256 oethPreviewAmountAfter = woeth.previewRedeem(1e18);
+        uint256 totalSupply = woeth.totalSupply();
+        uint256 totalAssets = woeth.totalAssets();
+        uint256 tolerance_preview_redeem = 20;
+
+        // When shares have an inflated value the contract looses precision. So the bigger
+        // the magnitude between assets and shares the biggest the rounding error and thus
+        // the bigger tolerance.
+        // Where the error occurs: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/fac43034dca85ff539db3fc8aa2a7084b843d454/contracts/token/ERC20/extensions/ERC4626.sol#L45
+        if (totalAssets > totalSupply) {
+            tolerance_preview_redeem = totalAssets / totalSupply * 10;
+        }
+
+        if (!approxEqAbs(oethPreviewAmountAfter, amountBefore, tolerance_preview_redeem)) {
+            emit Log.log_named_uint("amountBefore", amountBefore);
+            emit Log.log_named_uint("tolerance_preview_redeem", tolerance_preview_redeem);
+            emit Log.log_named_uint("totalAssets", totalAssets);
+            emit Log.log_named_uint("WOETH total supply", woeth.totalSupply());
+            emit Log.log_named_uint("diff: ", delta(amountBefore, oethPreviewAmountAfter));
+
+            require(false, "Preview redeem amount changed");
+        }
     }
 }
