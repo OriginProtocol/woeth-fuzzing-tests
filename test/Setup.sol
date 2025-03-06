@@ -128,6 +128,8 @@ abstract contract Setup is Helper {
         oeth = OETH(address(oethProxy));
         woeth = WOETH(address(woethProxy));
 
+        YIELD_TIME = woeth.YIELD_TIME();
+
         if (USE_LABELS) {
             hevm.label(address(oeth), "OETH");
             hevm.label(address(woeth), "WOETH");

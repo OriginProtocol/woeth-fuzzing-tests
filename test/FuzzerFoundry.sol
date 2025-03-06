@@ -24,7 +24,7 @@ contract FuzzerFoundry is StdInvariant, StdAssertions, TargetFunctions {
         targetContract(address(this));
 
         // Add selectors
-        bytes4[] memory selectors = new bytes4[](8);
+        bytes4[] memory selectors = new bytes4[](11);
         selectors[0] = this.handler_deposit.selector;
         selectors[1] = this.handler_mint.selector;
         selectors[2] = this.handler_redeem.selector;
@@ -33,18 +33,34 @@ contract FuzzerFoundry is StdInvariant, StdAssertions, TargetFunctions {
         selectors[5] = this.handler_donate.selector;
         selectors[6] = this.handler_mintOrBurnExtraOETH.selector;
         selectors[7] = this.handler_views.selector;
+        selectors[8] = this.handler_pass_time.selector;
+        selectors[9] = this.handler_transfer.selector;
+        selectors[10] = this.handler_schedule_yield.selector;
 
         // Target selectors
         targetSelector(FuzzSelector({addr: address(this), selectors: selectors}));
     }
 
-    function invariant_A() public view {
+    function invariant_A() public {
         require(property_A(), "Invariant A failed");
     }
 
-    function invariant_D() public {
-        require(property_D(), "Invariant D failed");
+    function invariant_B() public {
+        require(property_yield_emissions(), "Invariant B failed");
     }
+
+    function invariant_C() public {
+        require(property_no_yield_emissions(), "Invariant C failed");
+    }
+
+    function invariant_D() public {
+        require(__property_assets_and_balance(), "Invariant D failed");
+    }
+
+    function invariant_E() public {
+        require(__property_total_assets_and_balance(), "Invariant E failed");
+    }
+
 
     function invariant_4626_views() public view {
         require(property_4626_views(), "Invariant 4626 views failed");

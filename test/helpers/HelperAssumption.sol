@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 abstract contract HelperAssumption {
     /// @notice As WOETH contract will be used for OUSD as OS (Sonic), we need to ensure that
-    ///         the maximum total supply is set realisticallly.
+    ///         the maximum total supply is set realistically.
     ///         - WOETH: There is less than 3M WETH in circulation in mainnet.
     ///         - OUSD : The biggest stablecoin has a total supply of 67B (USDT on mainnet and Tron).
     ///         - OS   : The current total supply of S is 4B.
@@ -18,4 +18,10 @@ abstract contract HelperAssumption {
 
     /// @notice Initial amount of OETH send to dead addresses.
     uint256 public constant INITIAL_DEAD_OETH_BALANCE = 11e16;
+
+    /// @notice Maximum amount of time a yield will drip without a contract interaction
+    uint256 MAX_YIELD_TIME = 1 days;
+
+    /// @notice yield time read from the WOETH contract
+    uint256 YIELD_TIME;
 }
