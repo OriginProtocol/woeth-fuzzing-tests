@@ -339,6 +339,21 @@ abstract contract TargetFunctions is Properties {
         __yieldEnd = woeth.yieldEnd();
     }
 
+    /// @notice Handle calling schedule yield
+    function handler_schedule_yield() public {
+        __yieldEndBefore = woeth.yieldEnd();
+        __totalAssetBefore = woeth.totalAssets();
+
+        woeth.scheduleYield();
+
+        last_action = LastAction.SHEDULE_YIELD;
+        __totalAssetAfter = woeth.totalAssets();
+        __oeth_balanace_of_woeth = oeth.balanceOf(address(woeth));
+        __trackedAssets = woeth.trackedAssets();
+        __yieldAssets = woeth.yieldAssets();
+        __yieldEnd = woeth.yieldEnd();
+    }
+
     /// @notice Handle manage supplies in OETH.
     /// @param _amount Amount of OETH to manage.
     /// @param _increase Increase or decrease the supply.
@@ -406,17 +421,19 @@ abstract contract TargetFunctions is Properties {
                 _burnOETHFrom(_user, oeth.balanceOf(_user));
             }
         }
-
+        emit Log.log("This happened");
         // Burn rebasingAddr1 and nonRebasingAddr1 OETH balances
         _burnOETHFrom(rebasingAddr1, oeth.balanceOf(rebasingAddr1));
         _burnOETHFrom(nonRebasingAddr1, oeth.balanceOf(nonRebasingAddr1));
 
+
         // --- Assertions ---
         //require(__property_B(), "Invariant B failed");
-        require(__property_C(), "Invariant C failed");
-        require(__property_D(), "Invariant D failed");
-        require(__property_E(), "Invariant E failed");
-        require(__property_F(), "Invariant F failed");
+        require(__property_mint_redeem_amounts(), "Invariant mint_redeem_amounts failed");
+        require(__property_mint_redeem_totalAssets(), "Invariant mint_redeem_amounts failed");
+        require(__property_assets_and_balance(), "Invariant assets_and_balance failed");
+        require(__property_total_asset_interval(), "Invariant total_asset_interval failed");
+
     }
 
     //////////////////////////////////////////////////////

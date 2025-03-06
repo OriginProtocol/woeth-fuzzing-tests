@@ -24,7 +24,7 @@ contract FuzzerFoundry is StdInvariant, StdAssertions, TargetFunctions {
         targetContract(address(this));
 
         // Add selectors
-        bytes4[] memory selectors = new bytes4[](10);
+        bytes4[] memory selectors = new bytes4[](11);
         selectors[0] = this.handler_deposit.selector;
         selectors[1] = this.handler_mint.selector;
         selectors[2] = this.handler_redeem.selector;
@@ -35,21 +35,18 @@ contract FuzzerFoundry is StdInvariant, StdAssertions, TargetFunctions {
         selectors[7] = this.handler_views.selector;
         selectors[8] = this.handler_pass_time.selector;
         selectors[9] = this.handler_transfer.selector;
+        selectors[10] = this.handler_schedule_yield.selector;
 
         // Target selectors
         targetSelector(FuzzSelector({addr: address(this), selectors: selectors}));
     }
 
-    function invariant_A() public view {
+    function invariant_A() public {
         require(property_A(), "Invariant A failed");
     }
 
     function invariant_G() public {
-        require(property_G(), "Invariant G failed");
-    }
-
-    function invariant_H() public {
-        require(property_H(), "Invariant H failed");
+        require(property_yield_emissions(), "Invariant G failed");
     }
 
     function invariant_4626_views() public view {

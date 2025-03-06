@@ -21,4 +21,7 @@ abstract contract HelperAssumption {
 
     /// @notice Maximum amount of time a yield will drip without a contract interaction
     uint256 MAX_YIELD_TIME = 1 days;
+
+    /// @notice yield time read from the WOETH contract
+    uint256 YIELD_TIME;
 }
