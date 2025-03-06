@@ -68,8 +68,8 @@ abstract contract Properties is Setup {
     // minimum yieldAssets required in order to check for yield
     // with this minimum amount each second yield should drip
     uint256 public t_G = 86400;
-    // the tolerance for the amount of dripped yield
-    uint256 public t_G_yield = 10;
+    // the tolerance for the amount of dripped yield. 1 WEI due to rounding
+    uint256 public t_G_yield = 1;
 
     //////////////////////////////////////////////////////
     /// --- DEFINITIONS
