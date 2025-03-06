@@ -64,7 +64,6 @@ abstract contract Properties is Setup {
     // --- Tolerances ---
     uint256 public t_B = 20 wei;
     uint256 public t_C = 10 wei;
-    uint256 public t_D = 1 wei;
     // minimum yieldAssets required in order to check for yield
     // with this minimum amount each second yield should drip
     uint256 public t_G = 86400;
@@ -86,6 +85,7 @@ abstract contract Properties is Setup {
     /// - [__property_mint_redeem_amounts] The sum of all deposited and minted should be lower than or equal to the sum of all redeemed and withdrawn (tolerance: 10 wei)
     /// - [__property_mint_redeem_totalAssets] Amount minted/deposited minus the amount redeemed/withdrawn should always be smaller than total assets in WOETH
     /// - [__property_assets_and_balance] Tracked assets should always be smaller or equal to OETH balance
+    /// - [__property_total_assets_and_balance] Total assets should always be smaller or equal to OETH balance
     /// - [__property_total_asset_interval] TotalAssets should be on an interval bound by:
     ///                  - start: tracked assets minus yield assets
     ///                  - end: tracked assets
@@ -151,15 +151,25 @@ abstract contract Properties is Setup {
     }
 
 
-    /// @dev Tested in the "afterInvariant" function
     function __property_assets_and_balance() public returns (bool) {
-        if (__oeth_balanace_of_woeth + t_D < __trackedAssets) {
+        if (__oeth_balanace_of_woeth < __trackedAssets) {
             emit Log.log_named_uint("oethBalance   ", __oeth_balanace_of_woeth);
             emit Log.log_named_uint("tracked assets   ", __trackedAssets);
             emit Log.log_named_uint("yieldAssets", __yieldAssets);
             emit Log.log_named_uint("diff: ", delta(__oeth_balanace_of_woeth, __trackedAssets));
             return false;
         }
+        return true;
+    }
+
+    function __property_total_assets_and_balance() public returns (bool) {
+        if (__oeth_balanace_of_woeth < __totalAssetAfter) {
+            emit Log.log_named_uint("oethBalance   ", __oeth_balanace_of_woeth);
+            emit Log.log_named_uint("total assets   ", __totalAssetAfter);
+            emit Log.log_named_uint("diff: ", delta(__oeth_balanace_of_woeth, __totalAssetAfter));
+            return false;
+        }
+        
         return true;
     }
 

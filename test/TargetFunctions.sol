@@ -146,7 +146,13 @@ abstract contract TargetFunctions is Properties {
 
         // Redeem WOETH.
         hevm.prank(user);
+        uint256 oethPreviewAmount = woeth.previewRedeem(_amountToRedeem);
+
+        // Redeem WOETH.
+        hevm.prank(user);
         uint256 oethAmount = woeth.redeem(_amountToRedeem, user, user);
+
+        require(oethPreviewAmount == oethAmount, "Preview redeem doesn't match redeemed amount");
 
         // --- Ghost data after ---
         last_action = LastAction.REDEEM;
@@ -427,10 +433,8 @@ abstract contract TargetFunctions is Properties {
 
 
         // --- Assertions ---
-        //require(__property_B(), "Invariant B failed");
         require(__property_mint_redeem_amounts(), "Invariant mint_redeem_amounts failed");
         require(__property_mint_redeem_totalAssets(), "Invariant mint_redeem_amounts failed");
-        require(__property_assets_and_balance(), "Invariant assets_and_balance failed");
         require(__property_total_asset_interval(), "Invariant total_asset_interval failed");
 
     }
