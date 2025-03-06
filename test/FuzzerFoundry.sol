@@ -45,8 +45,12 @@ contract FuzzerFoundry is StdInvariant, StdAssertions, TargetFunctions {
         require(property_A(), "Invariant A failed");
     }
 
-    function invariant_G() public {
-        require(property_yield_emissions(), "Invariant G failed");
+    function invariant_B() public {
+        require(property_yield_emissions(), "Invariant B failed");
+    }
+
+    function invariant_C() public {
+        require(property_no_yield_emissions(), "Invariant C failed");
     }
 
     function invariant_4626_views() public view {

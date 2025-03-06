@@ -421,7 +421,6 @@ abstract contract TargetFunctions is Properties {
                 _burnOETHFrom(_user, oeth.balanceOf(_user));
             }
         }
-        emit Log.log("This happened");
         // Burn rebasingAddr1 and nonRebasingAddr1 OETH balances
         _burnOETHFrom(rebasingAddr1, oeth.balanceOf(rebasingAddr1));
         _burnOETHFrom(nonRebasingAddr1, oeth.balanceOf(nonRebasingAddr1));

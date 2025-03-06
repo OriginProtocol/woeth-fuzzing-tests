@@ -80,7 +80,7 @@ abstract contract Properties is Setup {
     ///                 - [DONATE, MINT_OR_BURN_EXTRA_OETH] (t: 0)
     ///                 - [TRANSFER] (t: 0)
     ///                 - [SCHEDULE_YIELD] (t: 0)
-    /// - [__property_B] At the end with an empty vault, all user should have more oeth than at the beginning (tolerance: 10 wei)
+    /// - [__cancelled_] At the end with an empty vault, all user should have more oeth than at the beginning (tolerance: 10 wei)
     ///                  NOTICE once we enabled transfers this invariant no longer applies. 
     ///                  This property has been CANCELLED
     /// - [__property_mint_redeem_amounts] The sum of all deposited and minted should be lower than or equal to the sum of all redeemed and withdrawn (tolerance: 10 wei)
@@ -90,6 +90,7 @@ abstract contract Properties is Setup {
     ///                  - start: tracked assets minus yield assets
     ///                  - end: tracked assets
     /// - [property_yield_emissions] If time passes and yield emission is active, totalAssets should increase
+    /// - [property_no_yield_emissions] If yield is not active time pass should not increase total assets
     /// --- ERC4626
     /// - The views functions should never revert (t:0)
     /// - On deposit or mint:
@@ -185,7 +186,7 @@ abstract contract Properties is Setup {
         if (last_action == LastAction.PASS_TIME &&  // if time has passed
             // and so much yield is distributed that each second will contribute to yield
             __yieldAssets >= t_G && 
-            // before time pass has been executed, we were within the yield period
+            // before time pass has been executed, contract had active yield drip
             __yieldEndBefore > block.timestamp - __lastTimePassAmount
         ) {
             uint256 yieldEmittingDuration = __lastTimePassAmount;
@@ -219,6 +220,19 @@ abstract contract Properties is Setup {
                 emit Log.log_named_uint("__totalAssetAfter", __totalAssetAfter);
             }
             return isExpected;
+        }
+        return true;
+    }
+
+    function property_no_yield_emissions() public returns (bool) {
+        if (last_action == LastAction.PASS_TIME &&  // if time has passed
+            // and so much yield is distributed that each second will contribute to yield
+            __yieldAssets >= t_G && 
+            // at pass time the yield on the contract wasn't active
+            __yieldEndBefore < block.timestamp - __lastTimePassAmount
+        ) {
+            // no yield drip should happen
+            return __totalAssetBefore == __totalAssetAfter;
         }
         return true;
     }
